@@ -159,13 +159,24 @@
     statusEl.innerHTML = msg;
   }
 
-  function fetchManual() {
-    setStatus("マニュアルを取得中… / Fetching…");
-    return fetch(MANUAL_URL + "?t=" + Date.now(), { cache: "no-store" })
+  /* ページ読込時に先読みし、タップ時はネットワークを待たない
+     (share()はユーザー操作の有効期限内に呼ぶ必要があるため) */
+  var manualText = null;
+  var manualPromise = null;
+  function prefetch() {
+    manualPromise = fetch(MANUAL_URL + "?t=" + Date.now(), { cache: "no-store" })
       .then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.text();
-      });
+      })
+      .then(function (text) { manualText = text; return text; });
+    return manualPromise;
+  }
+  prefetch();
+  function fetchManual() {
+    if (manualText) { return Promise.resolve(manualText); }
+    setStatus("マニュアルを取得中… / Fetching…");
+    return manualPromise || prefetch();
   }
 
   function fallbackLink() {
@@ -180,20 +191,27 @@
     shareBtn.hidden = false;
   }
 
+  function doShare(text) {
+    var file = new File([text], FILE_NAME, { type: "text/markdown" });
+    var fileType = "md";
+    if (!navigator.canShare({ files: [file] })) {
+      file = new File([text], FILE_NAME_TXT, { type: "text/plain" });
+      fileType = "txt";
+    }
+    return navigator.share({
+      files: [file],
+      title: "なみのおうち ハウスマニュアル"
+    }).then(function () {
+      return fileType;
+    });
+  }
+
   shareBtn.addEventListener("click", function () {
     shareBtn.disabled = true;
+    /* 先読み済みなら同期的にshare()を呼び、ユーザー操作の有効期限切れを回避 */
     fetchManual()
       .then(function (text) {
-        var file = new File([text], FILE_NAME, { type: "text/markdown" });
-        var fileType = "md";
-        if (!navigator.canShare({ files: [file] })) {
-          file = new File([text], FILE_NAME_TXT, { type: "text/plain" });
-          fileType = "txt";
-        }
-        return navigator.share({
-          files: [file],
-          title: "なみのおうち ハウスマニュアル"
-        }).then(function () {
+        return doShare(text).then(function (fileType) {
           setStatus("✅ 共有しました。AIアプリでファイルについて質問してください。<br>Shared! Ask your AI app about the file.", "ok");
           track("share_manual", { file_type: fileType });
         });
