@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>AIコンシェルジュに質問 | なみのおうち</title>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CEN4DZV654"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-CEN4DZV654');
+</script>
+
+<style>
+  :root {
+    --ink: #23404f;
+    --sub: #5b7684;
+    --sea: #2a7f9e;
+    --sea-light: #cfe7ef;
+    --sand: #f7f4ee;
+    --ok: #1c7a4d;
+    --err: #b3403a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    margin: 0;
+    background: var(--sand);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  main { width: 100%; max-width: 440px; }
+  .card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 28px 22px;
+    box-shadow: 0 2px 16px rgba(35, 64, 79, 0.08);
+  }
+  h1 {
+    font-size: 19px;
+    margin: 0 0 4px;
+    letter-spacing: 0.03em;
+    text-align: center;
+  }
+  .wave { display: block; text-align: center; font-size: 22px; margin-bottom: 10px; }
+  .lead {
+    font-size: 14px;
+    line-height: 1.8;
+    margin: 0 0 20px;
+    text-align: center;
+  }
+  .en { color: var(--sub); font-size: 12px; }
+  .buttons { display: flex; flex-direction: column; gap: 10px; }
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 58px;
+    padding: 10px 16px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--ink);
+    background: #ffffff;
+    border: 2px solid var(--sea);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.06s ease;
+  }
+  button small {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--sub);
+    letter-spacing: 0.04em;
+  }
+  .primary { background: var(--sea); color: #ffffff; }
+  .primary small { color: var(--sea-light); }
+  button:active { transform: scale(0.98); }
+  button:focus-visible { outline: 3px solid #7fc4da; outline-offset: 2px; }
+  button[disabled] { opacity: 0.6; cursor: wait; }
+  #status {
+    min-height: 1.5em;
+    margin: 14px 0 0;
+    font-size: 13px;
+    line-height: 1.7;
+    text-align: center;
+  }
+  #status.ok { color: var(--ok); }
+  #status.err { color: var(--err); }
+  #status a { color: var(--sea); word-break: break-all; }
+  .home {
+    display: block;
+    margin-top: 18px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--sub);
+  }
+  .home a { color: var(--sea); }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <span class="wave">🌊</span>
+    <h1>AIコンシェルジュに質問</h1>
+    <p class="lead">
+      ハウスマニュアル全文をお使いのAIチャットに渡して、<br>滞在中の疑問を聞いてみてください。<br>
+      <span class="en">Give the house manual to your AI assistant<br>and ask anything about your stay.</span>
+    </p>
+    <div class="buttons">
+      <button id="btn-copy" class="primary" type="button">
+        📋 <span>マニュアルをコピー<small>Copy manual text</small></span>
+      </button>
+      <button id="btn-share" type="button" hidden>
+        📤 <span>AIアプリに共有<small>Share to AI app</small></span>
+      </button>
+      <button id="btn-download" type="button">
+        ⬇️ <span>ファイルをダウンロード<small>Download .md file</small></span>
+      </button>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+  </div>
+  <p class="home"><a href="https://sites.google.com/view/naminoouchi/">← なみのおうち ガイドに戻る / Back to guide</a></p>
+</main>
+
+<script>
+(function () {
+  var MANUAL_URL = "https://naminoouchi.github.io/manual.md";
+  var FILE_NAME = "naminoouchi-house-manual.md";
+  var FILE_NAME_TXT = "naminoouchi-house-manual.txt";
+
+  var statusEl = document.getElementById("status");
+  var copyBtn = document.getElementById("btn-copy");
+  var shareBtn = document.getElementById("btn-share");
+  var dlBtn = document.getElementById("btn-download");
+
+  function track(eventName, extra) {
+    if (typeof gtag === "function") {
+      var params = { widget: "ai_page" };
+      if (extra) { for (var k in extra) { params[k] = extra[k]; } }
+      gtag("event", eventName, params);
+    }
+  }
+
+  function setStatus(msg, kind) {
+    statusEl.className = kind || "";
+    statusEl.innerHTML = msg;
+  }
+
+  function fetchManual() {
+    setStatus("マニュアルを取得中… / Fetching…");
+    return fetch(MANUAL_URL + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      });
+  }
+
+  function fallbackLink() {
+    return 'こちらを開いて全文を選択してください / Open and select all:<br><a href="' +
+      MANUAL_URL + '" target="_blank" rel="noopener">' + MANUAL_URL + "</a>";
+  }
+
+  /* ---- 共有: 対応環境のみ表示 ---- */
+  var probeFile = null;
+  try { probeFile = new File(["nmo"], FILE_NAME, { type: "text/markdown" }); } catch (e) {}
+  if (probeFile && navigator.canShare && navigator.canShare({ files: [probeFile] })) {
+    shareBtn.hidden = false;
+  }
+
+  shareBtn.addEventListener("click", function () {
+    shareBtn.disabled = true;
+    fetchManual()
+      .then(function (text) {
+        var file = new File([text], FILE_NAME, { type: "text/markdown" });
+        var fileType = "md";
+        if (!navigator.canShare({ files: [file] })) {
+          file = new File([text], FILE_NAME_TXT, { type: "text/plain" });
+          fileType = "txt";
+        }
+        return navigator.share({
+          files: [file],
+          title: "なみのおうち ハウスマニュアル"
+        }).then(function () {
+          setStatus("✅ 共有しました。AIアプリでファイルについて質問してください。<br>Shared! Ask your AI app about the file.", "ok");
+          track("share_manual", { file_type: fileType });
+        });
+      })
+      .catch(function (err) {
+        if (err && err.name === "AbortError") {
+          setStatus("");
+          track("share_cancel");
+        } else {
+          setStatus("共有できませんでした（" + (err && err.name) + "）。コピーをお試しください。<br>Sharing failed - please try Copy instead.", "err");
+          track("share_error", { error_name: (err && err.name) || "unknown" });
+        }
+      })
+      .then(function () { shareBtn.disabled = false; });
+  });
+
+  /* ---- コピー ---- */
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  copyBtn.addEventListener("click", function () {
+    copyBtn.disabled = true;
+    fetchManual()
+      .then(function (text) {
+        var done = function () {
+          setStatus("✅ コピーしました。AIチャットに貼り付けて質問してください。<br>Copied! Paste it into your AI chat and ask away.", "ok");
+          track("copy_manual");
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, function () {
+            if (legacyCopy(text)) { done(); }
+            else { setStatus("コピーできませんでした。" + fallbackLink(), "err"); }
+          });
+        } else if (legacyCopy(text)) {
+          done();
+        } else {
+          setStatus("コピーできませんでした。" + fallbackLink(), "err");
+        }
+      })
+      .catch(function () {
+        setStatus("取得に失敗しました。" + fallbackLink(), "err");
+      })
+      .then(function () { copyBtn.disabled = false; });
+  });
+
+  /* ---- ダウンロード ---- */
+  dlBtn.addEventListener("click", function () {
+    dlBtn.disabled = true;
+    fetchManual()
+      .then(function (text) {
+        var blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = FILE_NAME;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+        setStatus("✅ ダウンロードしました。AIチャットにファイルを添付してください。<br>Downloaded! Attach the file to your AI chat.", "ok");
+        track("download_manual");
+      })
+      .catch(function () {
+        setStatus("ダウンロードできませんでした。" + fallbackLink(), "err");
+      })
+      .then(function () { dlBtn.disabled = false; });
+  });
+})();
+</script>
+</body>
+</html>
