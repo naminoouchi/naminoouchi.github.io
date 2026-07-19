@@ -81,6 +81,37 @@
     margin: 0 0 20px;
     text-align: center;
   }
+  .steps {
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--sub);
+  }
+  .steps li {
+    counter-increment: step;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 4px 0;
+  }
+  .steps li::before {
+    content: counter(step);
+    flex: none;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sea);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+  }
   .buttons { display: flex; flex-direction: column; gap: 10px; }
   .action {
     display: flex;
@@ -138,10 +169,10 @@
 <main>
   <div class="langs" id="langs" role="group" aria-label="Language"></div>
   <div class="card">
-    <div style="text-align:right;font-size:10px;color:#b8c8d0;">v3.1</div>
     <span class="wave">🌊</span>
     <h1 id="t-title"></h1>
     <p class="lead" id="t-lead"></p>
+    <ol class="steps" id="t-steps"></ol>
     <div class="buttons">
       <button id="btn-copy" class="action primary" type="button">
         📋 <span id="t-copy"></span>
@@ -181,8 +212,9 @@
   var I18N = {
     ja: {
       label: "日本語",
-      title: "AIコンシェルジュに質問",
-      lead: "ハウスマニュアル全文をお使いのAIチャットに渡して、滞在中の疑問を聞いてみてください。",
+      title: "いつものAIを、なみのおうちガイドに",
+      lead: "あなたがいつも使っているAIが、なみのおうちの案内役になります。マニュアル全文を渡して、なんでも聞いてください。",
+      steps: ["下のボタンでマニュアルをコピー", "いつものAIアプリを開く(ChatGPT・Claude・Gemini・Grokなど)", "貼り付けて、なんでも質問"],
       copy: "マニュアルをコピー", copySub: "AIチャットに貼り付け",
       share: "AIアプリに共有", shareSub: "ファイルを直接渡す",
       download: "ファイルをダウンロード", downloadSub: ".mdファイルを保存",
@@ -199,8 +231,9 @@
     },
     en: {
       label: "English",
-      title: "Ask the AI Concierge",
-      lead: "Give the full house manual to your AI assistant and ask anything about your stay.",
+      title: "Turn your AI into your Naminoouchi guide",
+      lead: "The AI you already use every day becomes your guide to this house. Hand it the full manual and ask anything.",
+      steps: ["Copy the manual with the button below", "Open your favorite AI app (ChatGPT, Claude, Gemini, Grok...)", "Paste it and ask away"],
       copy: "Copy manual", copySub: "Paste into your AI chat",
       share: "Share to AI app", shareSub: "Send the file directly",
       download: "Download file", downloadSub: "Save as .md file",
@@ -217,8 +250,9 @@
     },
     pt: {
       label: "Português",
-      title: "Pergunte ao Concierge de IA",
-      lead: "Entregue o manual completo da casa ao seu assistente de IA e pergunte o que quiser sobre a estadia.",
+      title: "Transforme sua IA no seu guia da Naminoouchi",
+      lead: "A IA que você já usa todo dia vira o seu guia desta casa. Entregue o manual completo e pergunte o que quiser.",
+      steps: ["Copie o manual com o botão abaixo", "Abra seu app de IA favorito (ChatGPT, Claude, Gemini, Grok...)", "Cole e pergunte à vontade"],
       copy: "Copiar manual", copySub: "Cole no seu chat de IA",
       share: "Compartilhar com app de IA", shareSub: "Enviar o arquivo diretamente",
       download: "Baixar arquivo", downloadSub: "Salvar como arquivo .md",
@@ -235,8 +269,9 @@
     },
     es: {
       label: "Español",
-      title: "Pregunta al Conserje de IA",
-      lead: "Entrega el manual completo de la casa a tu asistente de IA y pregunta lo que quieras sobre tu estancia.",
+      title: "Convierte tu IA en tu guía de Naminoouchi",
+      lead: "La IA que ya usas cada día se convierte en tu guía de esta casa. Entrégale el manual completo y pregunta lo que quieras.",
+      steps: ["Copia el manual con el botón de abajo", "Abre tu app de IA favorita (ChatGPT, Claude, Gemini, Grok...)", "Pégalo y pregunta lo que necesites"],
       copy: "Copiar manual", copySub: "Pégalo en tu chat de IA",
       share: "Compartir con app de IA", shareSub: "Enviar el archivo directamente",
       download: "Descargar archivo", downloadSub: "Guardar como archivo .md",
@@ -253,8 +288,9 @@
     },
     "zh-Hant": {
       label: "繁體中文",
-      title: "詢問 AI 禮賓服務",
-      lead: "將完整的房屋使用手冊交給您的 AI 助理，隨時詢問住宿相關問題。",
+      title: "讓您常用的AI成為Naminoouchi嚮導",
+      lead: "您平常使用的AI，將成為這間房子的嚮導。把完整手冊交給它，想問什麼都可以。",
+      steps: ["用下方按鈕複製手冊", "打開您常用的AI應用（ChatGPT、Claude、Gemini、Grok等）", "貼上後隨意提問"],
       copy: "複製手冊", copySub: "貼到您的 AI 聊天中",
       share: "分享至 AI 應用程式", shareSub: "直接傳送檔案",
       download: "下載檔案", downloadSub: "儲存為 .md 檔案",
@@ -271,8 +307,9 @@
     },
     "zh-Hans": {
       label: "简体中文",
-      title: "咨询 AI 礼宾服务",
-      lead: "将完整的房屋使用手册交给您的 AI 助手，随时询问住宿相关问题。",
+      title: "让您常用的AI成为Naminoouchi向导",
+      lead: "您平常使用的AI，将成为这间房子的向导。把完整手册交给它，想问什么都可以。",
+      steps: ["用下方按钮复制手册", "打开您常用的AI应用（ChatGPT、Claude、Gemini、Grok等）", "粘贴后随意提问"],
       copy: "复制手册", copySub: "粘贴到您的 AI 聊天中",
       share: "分享至 AI 应用", shareSub: "直接发送文件",
       download: "下载文件", downloadSub: "保存为 .md 文件",
@@ -289,8 +326,9 @@
     },
     ko: {
       label: "한국어",
-      title: "AI 컨시어지에게 질문",
-      lead: "하우스 매뉴얼 전문을 사용 중인 AI 챗에 전달하고 숙박 중 궁금한 점을 물어보세요.",
+      title: "늘 쓰는 AI를 나미노오우치 가이드로",
+      lead: "평소에 쓰시는 AI가 이 집의 가이드가 됩니다. 매뉴얼 전문을 건네고 무엇이든 물어보세요.",
+      steps: ["아래 버튼으로 매뉴얼 복사", "늘 쓰는 AI 앱 열기 (ChatGPT・Claude・Gemini・Grok 등)", "붙여넣고 자유롭게 질문"],
       copy: "매뉴얼 복사", copySub: "AI 챗에 붙여넣기",
       share: "AI 앱에 공유", shareSub: "파일을 바로 전달",
       download: "파일 다운로드", downloadSub: ".md 파일로 저장",
@@ -352,6 +390,13 @@
     document.documentElement.lang = currentLang;
     document.getElementById("t-title").textContent = t("title");
     document.getElementById("t-lead").textContent = t("lead");
+    var stepsEl = document.getElementById("t-steps");
+    stepsEl.innerHTML = "";
+    (I18N[currentLang].steps || []).forEach(function (s) {
+      var li = document.createElement("li");
+      li.textContent = s;
+      stepsEl.appendChild(li);
+    });
     document.getElementById("t-copy").innerHTML = t("copy") + "<small>" + t("copySub") + "</small>";
     document.getElementById("t-share").innerHTML = t("share") + "<small>" + t("shareSub") + "</small>";
     document.getElementById("t-download").innerHTML = t("download") + "<small>" + t("downloadSub") + "</small>";
